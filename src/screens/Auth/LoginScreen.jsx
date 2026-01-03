@@ -26,31 +26,26 @@ const LoginScreen = ({ navigation }) => {
 
   // Dropdown States
   const [selectedRegion, setSelectedRegion] = useState(null);
-  const [selectedCity, setSelectedCity] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
 
   // Derived Data for Dropdowns
   const regions = useMemo(() => Object.keys(somaliAdministrativeHierarchy).sort(), []);
 
-  const cities = useMemo(() => {
-    if (!selectedRegion) return [];
-    return Object.keys(somaliAdministrativeHierarchy[selectedRegion].cities).sort();
-  }, [selectedRegion]);
-
   const districts = useMemo(() => {
-    if (!selectedRegion || !selectedCity) return [];
-    return Object.keys(somaliAdministrativeHierarchy[selectedRegion].cities[selectedCity].districts).sort();
-  }, [selectedRegion, selectedCity]);
+    if (!selectedRegion) return [];
+    const districtNames = new Set();
+    const regionCities = somaliAdministrativeHierarchy[selectedRegion].cities;
+    Object.values(regionCities).forEach((city) => {
+      Object.keys(city.districts).forEach((district) => {
+        districtNames.add(district);
+      });
+    });
+    return Array.from(districtNames).sort();
+  }, [selectedRegion]);
 
   // Reset logic when parent selection changes
   const handleRegionSelect = (region) => {
     setSelectedRegion(region);
-    setSelectedCity(null);
-    setSelectedDistrict(null);
-  };
-
-  const handleCitySelect = (city) => {
-    setSelectedCity(city);
     setSelectedDistrict(null);
   };
 
@@ -110,7 +105,7 @@ const LoginScreen = ({ navigation }) => {
                     label="Full Name"
                   />
 
-                  {/* Cascading Dropdowns */}
+                  {/* Region and District Dropdowns */}
                   <ClayDropdown
                     label="Region"
                     placeholder="Select Region"
@@ -120,21 +115,12 @@ const LoginScreen = ({ navigation }) => {
                   />
 
                   <ClayDropdown
-                    label="City"
-                    placeholder="Select City"
-                    value={selectedCity}
-                    options={cities}
-                    onSelect={handleCitySelect}
-                    disabled={!selectedRegion}
-                  />
-
-                  <ClayDropdown
                     label="District"
                     placeholder="Select District"
                     value={selectedDistrict}
                     options={districts}
                     onSelect={setSelectedDistrict}
-                    disabled={!selectedCity}
+                    disabled={!selectedRegion}
                   />
                 </>
               )}
