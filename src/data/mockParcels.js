@@ -1,10 +1,11 @@
-// src/data/mockParcels.js
+﻿// src/data/mockParcels.js
 
 export const MOCK_PARCELS = [
   {
     id: '1',
     trackingNumber: 'EE849201334US',
     sender: 'Amazon US',
+    recipientName: 'Abdi Tester',
     status: 'READY_FOR_PICKUP',
     pudoId: '1',
     arrivalDate: '2025-01-02',
@@ -21,6 +22,7 @@ export const MOCK_PARCELS = [
     id: '2',
     trackingNumber: 'CP112233445CN',
     sender: 'AliExpress Vendor',
+    recipientName: 'Abdi Tester',
     status: 'IN_TRANSIT',
     currentLocation: 'Dubai Sorting Hub',
     estimatedArrival: '2025-01-05',
@@ -35,6 +37,7 @@ export const MOCK_PARCELS = [
     id: '3',
     trackingNumber: 'RA998877665SO',
     sender: 'Ministry of Interior',
+    recipientName: 'Abdi Tester',
     status: 'COLLECTED',
     collectedDate: '2024-12-20',
     description: 'Official Documents',
@@ -45,6 +48,7 @@ export const MOCK_PARCELS = [
   },
 ];
 
+// THIS WAS MISSING:
 export const STATUS_CONFIG = {
   READY_FOR_PICKUP: {
     label: 'Ready for Pickup',

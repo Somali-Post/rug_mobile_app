@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TextInput, Alert, Vibration } from 'react-native';
-import { CameraScreen } from 'react-native-camera-kit';
+import { Camera } from 'react-native-camera-kit';
 import { COLORS, SPACING } from '../../theme/theme';
 import ClayButton from '../../components/common/ClayButton';
 import { MOCK_PARCELS } from '../../data/mockParcels';
@@ -70,7 +70,7 @@ const AgentScanScreen = ({ navigation }) => {
 
       {/* Camera View */}
       <View style={styles.cameraContainer}>
-        <CameraScreen
+        <Camera
           scanBarcode={true}
           onReadCode={(event) => processCode(event.nativeEvent.codeStringValue)}
           showFrame={true}

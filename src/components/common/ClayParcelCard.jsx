@@ -1,20 +1,22 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS, SPACING, CLAY_STYLES } from '../../theme/theme';
+import { COLORS, SPACING } from '../../theme/theme';
 import { STATUS_CONFIG } from '../../data/mockParcels';
 
-const ClayParcelCard = ({ parcel, onPress }) => {
+const ClayParcelCard = ({ parcel, onPress, variant = 'customer' }) => {
   const statusInfo = STATUS_CONFIG[parcel.status];
   const isReady = parcel.status === 'READY_FOR_PICKUP';
+  const isAgent = variant === 'agent';
 
   return (
     <View style={styles.wrapper}>
-      <TouchableOpacity 
-        onPress={onPress} 
+      <TouchableOpacity
+        onPress={onPress}
         activeOpacity={0.8}
         style={styles.container}
+        disabled={isAgent}
       >
-        {/* Header: Tracking Number & Status Badge */}
+        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.label}>TRACKING NO.</Text>
@@ -25,25 +27,36 @@ const ClayParcelCard = ({ parcel, onPress }) => {
           </View>
         </View>
 
-        {/* Content: Sender & Desc */}
+        {/* Content */}
         <View style={styles.content}>
           <Text style={styles.sender}>From: {parcel.sender}</Text>
           <Text style={styles.description}>{parcel.description}</Text>
         </View>
 
-        {/* Action Area: Pickup Code or Transit Info */}
+        {/* Action Area */}
         {isReady ? (
-          <View style={styles.actionArea}>
-            <View style={styles.pickupBox}>
-              <Text style={styles.pickupLabel}>PICKUP CODE</Text>
-              <Text style={styles.pickupCode}>{parcel.pickupCode}</Text>
-            </View>
-            <Text style={styles.instruction}>Show this code to agent</Text>
+          <View style={[styles.actionArea, isAgent && styles.agentActionArea]}>
+            {isAgent ? (
+              // --- AGENT VIEW (SECURE) ---
+              <View style={styles.agentSecureBox}>
+                <Text style={styles.secureIcon}>🔒</Text>
+                <Text style={styles.secureText}>Waiting for Customer Scan</Text>
+              </View>
+            ) : (
+              // --- CUSTOMER VIEW (SHOW CODE) ---
+              <>
+                <View style={styles.pickupBox}>
+                  <Text style={styles.pickupLabel}>PICKUP CODE</Text>
+                  <Text style={styles.pickupCode}>{parcel.pickupCode}</Text>
+                </View>
+                <Text style={styles.instruction}>Show this code to agent</Text>
+              </>
+            )}
           </View>
         ) : (
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              {parcel.status === 'IN_TRANSIT' 
+              {parcel.status === 'IN_TRANSIT'
                 ? `Est. Arrival: ${parcel.estimatedArrival}`
                 : `Collected on: ${parcel.collectedDate}`
               }
@@ -64,8 +77,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: SPACING.m,
-    // Clay Shadow
-    shadowColor: "#000000",
+    shadowColor: "#000",
     shadowOffset: { width: 6, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -88,7 +100,7 @@ const styles = StyleSheet.create({
   trackingNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: '#FFF',
     letterSpacing: 0.5,
   },
   badge: {
@@ -108,7 +120,7 @@ const styles = StyleSheet.create({
   sender: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textPrimary,
+    color: '#FFF',
   },
   description: {
     fontSize: 12,
@@ -121,6 +133,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  agentActionArea: {
+    backgroundColor: 'rgba(255, 107, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 0, 0.3)',
+    justifyContent: 'center',
   },
   pickupBox: {
     alignItems: 'center',
@@ -142,9 +160,22 @@ const styles = StyleSheet.create({
     width: '40%',
     textAlign: 'right',
   },
+  agentSecureBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  secureIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  secureText: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: '#D1D9E6',
+    borderTopColor: 'rgba(255,255,255,0.1)',
     paddingTop: SPACING.s,
   },
   footerText: {
