@@ -1,20 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+﻿import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  StatusBar,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Keyboard,
+} from 'react-native';
 import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../../redux/authSlice';
 import { COLORS, SPACING } from '../../theme/theme';
 import ClayButton from '../../components/common/ClayButton';
 import ClayCodeInput from '../../components/common/ClayCodeInput';
-import { loginSuccess } from '../../redux/authSlice';
+import BackgroundWave from '../../components/layout/BackgroundWave';
 
 const OTPScreen = ({ navigation, route }) => {
-  // Get phone number passed from Login Screen
   const { phone } = route.params || { phone: 'your number' };
   const dispatch = useDispatch();
-  
+
   const [code, setCode] = useState('');
   const [timer, setTimer] = useState(30);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  // Simple countdown timer effect
   useEffect(() => {
     let interval;
     if (timer > 0) {
@@ -25,120 +36,181 @@ const OTPScreen = ({ navigation, route }) => {
 
   const handleVerify = () => {
     if (code.length === 6) {
-      // SAVE USER TO REDUX
-      dispatch(loginSuccess({ phone: phone }));
-      
-      // Navigate
-      navigation.replace('PudoSelection');
+      setIsVerifying(true);
+      Keyboard.dismiss();
+
+      // Simulate API delay for effect
+      setTimeout(() => {
+        dispatch(loginSuccess({ phone: phone }));
+        navigation.replace('PudoSelection');
+      }, 500);
     } else {
-      alert("Please enter the full 6-digit code");
+      // Optional: Shake animation here
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        
-        <Text style={styles.title}>Verification</Text>
-        <Text style={styles.subtitle}>
-          We sent a code to <Text style={styles.highlight}>+252 {phone}</Text>
-        </Text>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-        <View style={styles.card}>
-          <ClayCodeInput code={code} setCode={setCode} />
-          
-          <View style={styles.resendContainer}>
-            <Text style={styles.resendText}>Didn't receive code? </Text>
-            <TouchableOpacity disabled={timer > 0} onPress={() => setTimer(30)}>
-              <Text style={[styles.resendLink, timer > 0 && styles.disabledLink]}>
-                {timer > 0 ? `Resend in ${timer}s` : "Resend Now"}
-              </Text>
+      <BackgroundWave />
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+            {/* Navy Circle for Lock */}
+            <View style={styles.iconContainer}>
+              <Text style={styles.lockIcon}>🔒</Text>
+            </View>
+
+            <Text style={styles.title}>Verification Code</Text>
+
+            {/* High Contrast Text */}
+            <Text style={styles.subtitle}>
+              We have sent a secure code to{'
+'}
+              <Text style={styles.phoneText}>+252 {phone}</Text>
+            </Text>
+
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Text style={styles.editLink}>Wrong number?</Text>
             </TouchableOpacity>
-          </View>
 
-          <View style={styles.spacer} />
+            <View style={styles.spacer} />
 
-          <ClayButton 
-            title="Verify & Login" 
-            onPress={handleVerify}
-            disabled={code.length < 6}
-          />
-        </View>
+            {/* Auto-submits when full */}
+            <ClayCodeInput code={code} setCode={setCode} onFull={handleVerify} />
 
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backLink}>
-          <Text style={styles.backText}>Change Phone Number</Text>
-        </TouchableOpacity>
+            <View style={styles.securityNote}>
+              <Text style={styles.securityText}>⚠️ Do not share this code with anyone.</Text>
+            </View>
 
-      </View>
-    </SafeAreaView>
+            <View style={styles.spacer} />
+
+            {/* Always Orange Button */}
+            <View style={{ opacity: code.length < 6 ? 0.6 : 1 }}>
+              <ClayButton
+                title={isVerifying ? 'Verifying...' : 'Verify Identity'}
+                onPress={handleVerify}
+                disabled={isVerifying || code.length < 6}
+                variant="primary" // Forces Orange
+              />
+            </View>
+
+            <View style={styles.resendContainer}>
+              <Text style={styles.resendText}>Didn't receive it? </Text>
+              <TouchableOpacity disabled={timer > 0} onPress={() => setTimer(30)}>
+                <Text style={[styles.resendLink, timer > 0 && styles.disabledLink]}>
+                  {timer > 0 ? `Resend in ${timer}s` : 'Resend Now'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  content: {
+  safeArea: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 0,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     padding: SPACING.l,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.background, // Deep Navy to pop against Orange
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.l,
+    // Add a glow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  lockIcon: {
+    fontSize: 36,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: '#FFFFFF',
     marginBottom: SPACING.s,
   },
   subtitle: {
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: '#E0E0E0', // Much lighter for readability
     textAlign: 'center',
-    marginBottom: SPACING.xl,
+    lineHeight: 24,
   },
-  highlight: {
-    color: COLORS.textPrimary,
+  phoneText: {
+    color: '#FFFFFF',
     fontWeight: 'bold',
+    fontSize: 18,
   },
-  card: {
-    width: '100%',
-    backgroundColor: COLORS.background,
-    padding: SPACING.l,
-    borderRadius: 20,
-    // Clay Shadow
-    shadowColor: "#A3B1C6",
-    shadowOffset: { width: 10, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  resendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: SPACING.m,
-  },
-  resendText: {
-    color: COLORS.textSecondary,
-  },
-  resendLink: {
+  editLink: {
     color: COLORS.primary,
-    fontWeight: 'bold',
-  },
-  disabledLink: {
-    color: COLORS.textSecondary,
-    opacity: 0.5,
+    marginTop: SPACING.s,
+    fontWeight: '600',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
   spacer: {
     height: SPACING.l,
   },
-  backLink: {
+  securityNote: {
+    marginTop: SPACING.m,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    paddingHorizontal: SPACING.m,
+    paddingVertical: SPACING.s,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  securityText: {
+    color: '#FFD700', // Gold/Yellow
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  resendContainer: {
+    flexDirection: 'row',
     marginTop: SPACING.xl,
   },
-  backText: {
-    color: COLORS.secondary,
-    textDecorationLine: 'underline',
-  }
+  resendText: {
+    color: '#B0B0B0',
+    fontSize: 14,
+  },
+  resendLink: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  disabledLink: {
+    color: '#B0B0B0',
+    opacity: 0.7,
+  },
 });
 
 export default OTPScreen;

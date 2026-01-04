@@ -1,50 +1,51 @@
-import React, { useState, useRef } from 'react';
+﻿import React from 'react';
 import { View, TextInput, Text, StyleSheet, Pressable } from 'react-native';
-import { COLORS, SPACING, CLAY_STYLES } from '../../theme/theme';
+import { COLORS, SPACING } from '../../theme/theme';
 
-const ClayCodeInput = ({ code, setCode, maxLength = 6 }) => {
-  const inputRef = useRef(null);
-  const [isFocused, setIsFocused] = useState(false);
-
-  const handlePress = () => {
-    inputRef.current?.focus();
+const ClayCodeInput = ({ code, setCode, maxLength = 6, onFull }) => {
+  const handleChange = (text) => {
+    const clean = text.replace(/[^0-9]/g, '');
+    setCode(clean);
+    // Auto-trigger if full
+    if (clean.length === maxLength && onFull) {
+      onFull(clean);
+    }
   };
 
-  // Create an array of length 6 to map over
   const boxArray = new Array(maxLength).fill(0);
 
   return (
     <View style={styles.container}>
-      <Pressable onPress={handlePress} style={styles.boxesContainer}>
+      {/* 1. The Visual Layer (Boxes) */}
+      <View style={styles.visualContainer}>
         {boxArray.map((_, index) => {
           const digit = code[index] || "";
-          const isCurrent = index === code.length && isFocused;
+          const isFilled = index < code.length;
+          // Highlight the *next* empty box, or the last one if full
+          const isActive = index === code.length || (index === maxLength - 1 && code.length === maxLength);
 
           return (
-            <View 
-              key={index} 
-              style={[
-                styles.box, 
-                isCurrent && styles.activeBox // Highlight the current box
-              ]}
+            <View
+              key={index}
+              style={[styles.box, isActive && styles.activeBox, isFilled && styles.filledBox]}
             >
               <Text style={styles.digitText}>{digit}</Text>
             </View>
           );
         })}
-      </Pressable>
+      </View>
 
-      {/* The Hidden Input that actually captures typing */}
+      {/* 2. The Touch Layer (Invisible Input on top) */}
+      {/* This ensures ANY tap on the area brings up the keyboard */}
       <TextInput
-        ref={inputRef}
         value={code}
-        onChangeText={(text) => setCode(text.replace(/[^0-9]/g, ''))}
+        onChangeText={handleChange}
         maxLength={maxLength}
         keyboardType="number-pad"
-        textContentType="oneTimeCode" // iOS Auto-fill magic
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        style={styles.hiddenInput}
+        textContentType="oneTimeCode"
+        style={styles.invisibleInput}
+        autoFocus={true}
+        caretHidden={true}
       />
     </View>
   );
@@ -52,47 +53,48 @@ const ClayCodeInput = ({ code, setCode, maxLength = 6 }) => {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    width: '100%',
+    height: 70, // Fixed height for the touch area
+    justifyContent: 'center',
     marginVertical: SPACING.l,
   },
-  boxesContainer: {
+  visualContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    paddingHorizontal: SPACING.s,
+  },
+  invisibleInput: {
+    ...StyleSheet.absoluteFillObject, // Covers the whole container
+    opacity: 0, // Invisible but clickable
   },
   box: {
-    width: 45,
-    height: 55,
+    width: 48,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.input, // "Pressed" background
+    backgroundColor: 'rgba(0, 40, 85, 0.6)', // Darker Navy transparent
     borderRadius: 12,
-    // Inner shadow simulation
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-    borderTopColor: '#000000',
-    borderLeftColor: '#000000',
-    borderBottomWidth: 0,
-    borderRightWidth: 0,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   activeBox: {
     borderColor: COLORS.primary,
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
-    borderTopWidth: 0,
-    borderLeftWidth: 0,
-    backgroundColor: COLORS.surface, // Pop out slightly when active
+    backgroundColor: 'rgba(255, 107, 0, 0.15)',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  filledBox: {
+    borderColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
   },
   digitText: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  hiddenInput: {
-    position: 'absolute',
-    opacity: 0, // Hide it but keep it functional
-    width: 1,
-    height: 1,
+    color: '#FFFFFF',
   },
 });
 
