@@ -19,7 +19,7 @@ import ClayCodeInput from '../../components/common/ClayCodeInput';
 import BackgroundWave from '../../components/layout/BackgroundWave';
 
 const OTPScreen = ({ navigation, route }) => {
-  const { phone } = route.params || { phone: 'your number' };
+  const { phone, fullName } = route.params || { phone: '', fullName: 'Valued Customer' };
   const dispatch = useDispatch();
 
   const [code, setCode] = useState('');
@@ -41,7 +41,15 @@ const OTPScreen = ({ navigation, route }) => {
 
       // Simulate API delay for effect
       setTimeout(() => {
-        dispatch(loginSuccess({ phone: phone }));
+        dispatch(
+          loginSuccess({
+            user: {
+              phone: phone,
+              name: fullName || 'Valued Customer',
+            },
+            isAgent: false,
+          })
+        );
         navigation.replace('PudoSelection');
       }, 500);
     } else {
@@ -70,8 +78,8 @@ const OTPScreen = ({ navigation, route }) => {
 
             {/* High Contrast Text */}
             <Text style={styles.subtitle}>
-              We have sent a secure code to{'
-'}
+              We have sent a secure code to
+              {'\n'}
               <Text style={styles.phoneText}>+252 {phone}</Text>
             </Text>
 

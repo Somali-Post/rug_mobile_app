@@ -54,8 +54,8 @@ const LoginScreen = ({ navigation }) => {
       alert('Please enter a valid phone number');
       return;
     }
-    // Navigate to OTP, passing the phone number
-    navigation.navigate('OTP', { phone: phone });
+    // Pass BOTH phone and fullName
+    navigation.navigate('OTP', { phone, fullName });
   };
 
   return (
